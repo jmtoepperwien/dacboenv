@@ -193,3 +193,4 @@ results*
 tmp*
 *slurm*
 *.png
+*.txt
