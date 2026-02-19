@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #SBATCH --job-name=mbros
 #SBATCH --partition=normal
 #SBATCH --time=48:00:00            

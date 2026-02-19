@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #SBATCH -t 24:00:00
 #SBATCH -J "dacboenv"
 #SBATCH --cpus-per-task=128

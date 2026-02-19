@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 BASE="carps.run hydra.searchpath=[pkg://dacboenv/configs]"
 SEED="seed=range(1,11)"
