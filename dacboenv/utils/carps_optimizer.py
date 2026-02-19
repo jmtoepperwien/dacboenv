@@ -8,6 +8,10 @@ from typing import TYPE_CHECKING
 import pandas as pd
 from carps.utils.env_vars import CARPS_ROOT
 from carps.utils.running import make_optimizer, make_task
+try:
+    from carps.utils.index_configs import get_index_config
+except:
+    pass
 from omegaconf import OmegaConf
 
 if TYPE_CHECKING:
@@ -34,7 +38,10 @@ def load_optimizer_config(optimizer_id: str) -> DictConfig:
         config_fn = optimizer_id
     else:
         index_fn = CARPS_ROOT / "configs/optimizer/index.csv"
-        df = pd.read_csv(index_fn)  # noqa: PD901
+        try:
+            df = get_index_config(index_fn)  # noqa: PD901
+        except NameError:
+            df = pd.read_csv(index_fn)  # noqa: PD901
         ids = [optimizer_id]
     config_fn = df.set_index("optimizer_id").loc[ids].reset_index().iloc[0]["config_fn"]
     cfg = OmegaConf.load(config_fn)
@@ -87,7 +94,11 @@ def get_task_config(task_id: str) -> DictConfig:
         The config with the node task.
     """
     task_index_fn = CARPS_ROOT / "configs/task/index.csv"
-    df = pd.read_csv(task_index_fn)  # noqa: PD901
+    try:
+        df = get_index_config(task_index_fn)  # noqa: PD901
+    except NameError:
+        df = pd.read_csv(task_index_fn)  # noqa: PD901
+
     ids = [task_id]
     # TODO raise proper error if task_id not in index. Can happen when task comes from external module.
     # Find smart registering method.
