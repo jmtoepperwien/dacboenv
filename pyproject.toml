@@ -9,7 +9,7 @@ name = "dacboenv"
 version = "0.0.1"
 dependencies = [
     "gymnasium",
-    "rich>=14.1.0",
+    "rich>=12.4",
     "smac>=2.3.1",
     "carps",
     "tqdm",
