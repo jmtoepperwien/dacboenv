@@ -8,8 +8,8 @@ build-backend = "setuptools.build_meta"
 name = "dacboenv"
 version = "0.0.1"
 dependencies = [
-    "gymnasium>=1.1.1",
-    "rich>=14.1.0",
+    "gymnasium",
+    "rich>=12.4",
     "smac>=2.3.1",
     "carps",
     "tqdm",

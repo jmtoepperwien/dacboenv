@@ -1,5 +1,5 @@
 
-SHELL := /bin/bash
+SHELL := /usr/bin/env bash
 PYTHON ?= python
 PIP ?= pip
 NAME := dacboenv

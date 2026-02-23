@@ -11,10 +11,17 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
-from carps.analysis.gather_data import filelogs_to_df, normalize_logs
+try:  # There have been breaking changes in CARP-S
+    from carps.analysis.gather_data_utils import filelogs_to_df, normalize_logs
+except ImportError:
+    from carps.analysis.gather_data import filelogs_to_df, normalize_logs
 from carps.analysis.utils import filter_only_final_performance
 from carps.utils.env_vars import CARPS_ROOT
 from carps.utils.running import optimize
+try:
+    from carps.utils.index_configs import get_index_config
+except ImportError:
+    pass
 from hydra import compose, initialize_config_module
 
 from dacboenv.utils.loggingutils import get_logger
@@ -120,7 +127,10 @@ def get_config_overrides(ids: list[str], index_csv: Path, group_name: str, id_co
     -------
         List of Hydra overrides like '+task/some/path=id1,id2'
     """
-    df = pd.read_csv(index_csv)  # noqa: PD901
+    try:
+        df = get_index_config(index_csv)  # noqa: PD901
+    except NameError:
+        df = pd.read_csv(index_csv)  # noqa: PD901
     try:
         filtered = df.set_index(id_col).loc[ids].reset_index()
     except KeyError as e:

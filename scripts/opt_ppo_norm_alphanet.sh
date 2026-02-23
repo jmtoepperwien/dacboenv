@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #SBATCH -t 48:00:00
 #SBATCH -J "ppo4dacbo"
 #SBATCH --cpus-per-task=16

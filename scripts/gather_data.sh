@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #SBATCH --job-name=gather
 #SBATCH --partition=normal
 #SBATCH --time=5:00:00            
