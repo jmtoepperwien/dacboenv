@@ -11,17 +11,21 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
+from carps.utils.index_configs import register_extra_paths
+from hydra.core.hydra_config import HydraConfig
+
 try:  # There have been breaking changes in CARP-S
     from carps.analysis.gather_data_utils import filelogs_to_df, normalize_logs
 except ImportError:
     from carps.analysis.gather_data import filelogs_to_df, normalize_logs
+import contextlib
+
 from carps.analysis.utils import filter_only_final_performance
 from carps.utils.env_vars import CARPS_ROOT
 from carps.utils.running import optimize
-try:
+
+with contextlib.suppress(ImportError):
     from carps.utils.index_configs import get_index_config
-except ImportError:
-    pass
 from hydra import compose, initialize_config_module
 
 from dacboenv.utils.loggingutils import get_logger
@@ -113,7 +117,7 @@ def get_seed_override(seeds: list[int]) -> str:
     return f"seed={','.join([str(s) for s in seeds])}"
 
 
-def get_config_overrides(ids: list[str], index_csv: Path, group_name: str, id_col: str) -> list[str]:
+def get_config_overrides(ids: list[str], index_csv_subpath: str, group_name: str, id_col: str) -> list[str]:
     """
     Generic function to generate Hydra config overrides.
 
@@ -127,10 +131,25 @@ def get_config_overrides(ids: list[str], index_csv: Path, group_name: str, id_co
     -------
         List of Hydra overrides like '+task/some/path=id1,id2'
     """
+    try:  # If using hydra
+        config = HydraConfig.get()
+        index_paths = [
+            Path(path_description["path"]) / index_csv_subpath
+            for path_description in config["runtime"]["config_sources"]
+            if path_description["schema"] == "file"
+        ] + [CARPS_ROOT / "configs" / index_csv_subpath]
+    except ValueError:
+        index_paths = [CARPS_ROOT / "configs" / index_csv_subpath]
+    if group_name == "task":
+        register_extra_paths([str(index_path.parent) for index_path in index_paths], None)
+    elif group_name == "optimizer":
+        register_extra_paths(None, [str(index_path.parent) for index_path in index_paths])
+
     try:
-        df = get_index_config(index_csv)  # noqa: PD901
+        print(index_paths)
+        df = pd.concat([get_index_config(path) for path in index_paths])  # noqa: PD901
     except NameError:
-        df = pd.read_csv(index_csv)  # noqa: PD901
+        df = pd.concat([pd.read_csv(path) for path in index_paths])  # noqa: PD901
     try:
         filtered = df.set_index(id_col).loc[ids].reset_index()
     except KeyError as e:
@@ -159,8 +178,7 @@ def get_task_overrides(task_ids: list[str]) -> list[str]:
     list[str]
         Hydra overrides.
     """
-    task_index_fn = CARPS_ROOT / "configs/task/index.csv"
-    return get_config_overrides(task_ids, task_index_fn, "task", "task_id")
+    return get_config_overrides(task_ids, "task/index.csv", "task", "task_id")
 
 
 def get_optimizer_overrides(optimizer_ids: list[str]) -> list[str]:
@@ -176,8 +194,7 @@ def get_optimizer_overrides(optimizer_ids: list[str]) -> list[str]:
     list[str]
         Hydra overrides.
     """
-    opt_index_fn = CARPS_ROOT / "configs/optimizer/index.csv"
-    return get_config_overrides(optimizer_ids, opt_index_fn, "optimizer", "optimizer_id")
+    return get_config_overrides(optimizer_ids, "optimizer/index.csv", "optimizer", "optimizer_id")
 
 
 def group_tuples(tuples: list[tuple], depth: int = 0) -> list:
